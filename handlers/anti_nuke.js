@@ -2,8 +2,8 @@
 const Discord = require("discord.js");
 var { MessageEmbed, MessageAttachment, Permissions } = require(`discord.js`);
 const { simple_databasing } = require(`./functions`);
-module.exports = async client => {
-    const { default: Enmap } = await import("enmap");
+module.exports = client => {
+    const Enmap = require("enmap").default || require("enmap");
     client.Anti_Nuke_System = new Enmap({
         name: "antinuke",
         dataDir: "./databases/antinuke",

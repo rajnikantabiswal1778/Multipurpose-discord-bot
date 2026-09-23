@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multipurpose Discord Bot Dashboard</title>
+  <meta name="description" content="Interactive web management dashboard, command explorer, soundboard, and control center for the Multipurpose Discord Bot.">
+  <meta property="og:title" content="Multipurpose Discord Bot Dashboard">
+  <meta property="og:description" content="Interactive web management dashboard, command explorer, soundboard, and control center for the Multipurpose Discord Bot.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            discord: {
+              blurple: '#5865F2',
+              green: '#57F287',
+              yellow: '#FEE75C',
+              fuchsia: '#EB459E',
+              red: '#ED4245',
+              dark: '#1e1f22',
+              darker: '#141517',
+              darkest: '#0b0c0d',
+              card: '#2b2d31',
+              channel: '#313338',
+              hover: '#35373c',
+              text: '#dbdee1',
+              muted: '#949ba4'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #1e1f22; }
+    ::-webkit-scrollbar-thumb { background: #35373c; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #4e5058; }
+    .discord-embed-bar { width: 4px; border-radius: 4px 0 0 4px; }
+  </style>
+</head>
+<body class="bg-discord-darker text-discord-text font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Main Layout -->
+  <div class="flex h-screen overflow-hidden">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-discord-dark flex-shrink-0 flex flex-col border-r border-discord-card">
+      <!-- Bot Header -->
+      <div class="h-16 flex items-center gap-3 px-4 border-b border-discord-card bg-discord-darkest/40">
+        <div class="relative">
+          <div class="w-10 h-10 rounded-full bg-discord-blurple flex items-center justify-center text-white font-bold text-lg shadow-md">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <span id="statusIndicatorDot" class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-discord-yellow border-2 border-discord-dark"></span>
+        </div>
+        <div class="overflow-hidden">
+          <h1 class="font-bold text-sm text-white truncate" id="botNameHeader">Clan Multipurpose</h1>
+          <p class="text-xs text-discord-muted truncate" id="botStatusSubHeader">Standby • 625 Cmds</p>
+        </div>
+      </div>
+
+      <!-- Nav Links -->
+      <nav class="flex-1 overflow-y-auto p-3 space-y-1 text-sm">
+        <button onclick="switchTab('overview')" class="nav-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-discord-text hover:bg-discord-channel hover:text-white transition group" data-tab="overview">
+          <i class="fa-solid fa-chart-pie w-5 text-discord-blurple group-hover:text-discord-blurple"></i>
+          <span class="font-medium">Overview & Status</span>
+        </button>
+
+        <button onclick="switchTab('commands')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-discord-text hover:bg-discord-channel hover:text-white transition group" data-tab="commands">
+          <i class="fa-solid fa-terminal w-5 text-discord-green group-hover:text-discord-green"></i>
+          <span class="font-medium">Command Explorer</span>
+          <span class="ml-auto text-xs bg-discord-card text-discord-muted px-2 py-0.5 rounded-full" id="commandCountBadge">625</span>
+        </button>
+
+        <button onclick="switchTab('simulator')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-discord-text hover:bg-discord-channel hover:text-white transition group" data-tab="simulator">
+          <i class="fa-solid fa-flask w-5 text-discord-yellow group-hover:text-discord-yellow"></i>
+          <span class="font-medium">Command Console</span>
+        </button>
+
+        <button onclick="switchTab('soundboard')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-discord-text hover:bg-discord-channel hover:text-white transition group" data-tab="soundboard">
+          <i class="fa-solid fa-volume-high w-5 text-discord-fuchsia group-hover:text-discord-fuchsia"></i>
+          <span class="font-medium">Soundboard Player</span>
+          <span class="ml-auto text-xs bg-discord-card text-discord-muted px-2 py-0.5 rounded-full" id="soundboardCountBadge">50+</span>
+        </button>
+
+        <button onclick="switchTab('radio')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-discord-text hover:bg-discord-channel hover:text-white transition group" data-tab="radio">
+          <i class="fa-solid fa-radio w-5 text-cyan-400 group-hover:text-cyan-400"></i>
+          <span class="font-medium">Live Radio Stations</span>
+        </button>
+
+        <button onclick="switchTab('config')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-discord-text hover:bg-discord-channel hover:text-white transition group" data-tab="config">
+          <i class="fa-solid fa-sliders w-5 text-orange-400 group-hover:text-orange-400"></i>
+          <span class="font-medium">Bot Configuration</span>
+        </button>
+      </nav>
+
+      <!-- Bottom Server Info / Controls -->
+      <div class="p-3 border-t border-discord-card bg-discord-darkest/30 text-xs">
+        <div class="flex items-center justify-between text-discord-muted mb-2">
+          <span>Web Server</span>
+          <span class="text-discord-green flex items-center gap-1.5 font-medium">
+            <span class="w-2 h-2 rounded-full bg-discord-green animate-pulse"></span> Port 3000
+          </span>
+        </div>
+        <div class="text-[11px] text-discord-muted/80">
+          Node <span id="nodeVerSpan">v22</span> • Express 4 • Discord.js v13
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col overflow-hidden bg-discord-channel">
+      
+      <!-- Top Bar -->
+      <header class="h-16 bg-discord-dark flex items-center justify-between px-6 border-b border-discord-card flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <span id="tabTitle" class="font-bold text-lg text-white">Bot Overview</span>
+          <span id="tabBadge" class="text-xs bg-discord-card px-2.5 py-1 rounded text-discord-muted">System Dashboard</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2 text-xs bg-discord-card px-3 py-1.5 rounded-lg border border-discord-hover">
+            <span class="text-discord-muted">Prefix:</span>
+            <code class="text-discord-yellow font-mono font-bold" id="topPrefixDisplay">//</code>
+          </div>
+          <button onclick="openTokenModal()" class="flex items-center gap-2 text-xs bg-discord-blurple hover:bg-discord-blurple/80 text-white px-3 py-1.5 rounded-lg transition font-medium">
+            <i class="fa-solid fa-key"></i>
+            <span>Set Discord Token</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Scrollable Tab Content Container -->
+      <div class="flex-1 overflow-y-auto p-6" id="tabContent">
+        
+        <!-- ============================================================ -->
+        <!-- TAB 1: OVERVIEW -->
+        <!-- ============================================================ -->
+        <div id="tab-overview" class="tab-pane space-y-6">
+          <!-- Status Banner -->
+          <div class="bg-gradient-to-r from-discord-card to-discord-dark p-6 rounded-xl border border-discord-hover shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-2xl bg-discord-blurple/20 border border-discord-blurple/40 flex items-center justify-center text-discord-blurple text-3xl">
+                <i class="fa-brands fa-discord"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 class="text-xl font-bold text-white" id="bannerBotName">Multipurpose Discord Bot</h2>
+                  <span id="bannerStatusPill" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-discord-yellow/20 text-discord-yellow border border-discord-yellow/30">
+                    Standby Mode
+                  </span>
+                </div>
+                <p class="text-sm text-discord-muted mt-1" id="bannerBotDesc">
+                  625 commands loaded across 15 categories with complete music, mini-games, economy, ranking, moderation, and soundboard.
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <button onclick="switchTab('simulator')" class="px-4 py-2 bg-discord-blurple hover:bg-opacity-90 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+                <i class="fa-solid fa-play"></i> Test Commands
+              </button>
+              <button onclick="switchTab('soundboard')" class="px-4 py-2 bg-discord-card hover:bg-discord-hover text-white rounded-lg text-sm font-medium transition border border-discord-hover flex items-center gap-2">
+                <i class="fa-solid fa-music"></i> Soundboard
+              </button>
+            </div>
+          </div>
+
+          <!-- Metric Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-discord-card p-4 rounded-xl border border-discord-hover/60">
+              <div class="flex items-center justify-between text-discord-muted mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider">Commands</span>
+                <i class="fa-solid fa-terminal text-discord-blurple"></i>
+              </div>
+              <div class="text-2xl font-bold text-white" id="statsCommands">625</div>
+              <div class="text-xs text-discord-muted mt-1">15 feature categories</div>
+            </div>
+
+            <div class="bg-discord-card p-4 rounded-xl border border-discord-hover/60">
+              <div class="flex items-center justify-between text-discord-muted mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider">Soundboard Clips</span>
+                <i class="fa-solid fa-volume-high text-discord-fuchsia"></i>
+              </div>
+              <div class="text-2xl font-bold text-white" id="statsSoundboard">51</div>
+              <div class="text-xs text-discord-muted mt-1">Instant browser audio</div>
+            </div>
+
+            <div class="bg-discord-card p-4 rounded-xl border border-discord-hover/60">
+              <div class="flex items-center justify-between text-discord-muted mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider">Radio Stations</span>
+                <i class="fa-solid fa-radio text-cyan-400"></i>
+              </div>
+              <div class="text-2xl font-bold text-white" id="statsRadio">100+</div>
+              <div class="text-xs text-discord-muted mt-1">Stream audio channels</div>
+            </div>
+
+            <div class="bg-discord-card p-4 rounded-xl border border-discord-hover/60">
+              <div class="flex items-center justify-between text-discord-muted mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider">Server Uptime</span>
+                <i class="fa-solid fa-clock text-discord-green"></i>
+              </div>
+              <div class="text-2xl font-bold text-white" id="statsUptime">0m 10s</div>
+              <div class="text-xs text-discord-muted mt-1">Node.js Server Process</div>
+            </div>
+          </div>
+
+          <!-- Feature Categories Grid -->
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-discord-muted mb-3">Bot Modules & Subsystems</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="categoryCardsGrid">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Discord Bot Quick Connection Info -->
+          <div class="bg-discord-dark p-5 rounded-xl border border-discord-card space-y-3">
+            <h3 class="font-bold text-white text-sm flex items-center gap-2">
+              <i class="fa-solid fa-circle-info text-discord-blurple"></i>
+              How to Connect Bot to Discord
+            </h3>
+            <p class="text-xs text-discord-muted leading-relaxed">
+              This application has all handlers, databases (SQLite/Enmap), 625 commands, audio files, and web console active. To connect the bot to your Discord server, enter a Bot Token from the <a href="https://discord.com/developers/applications" target="_blank" class="text-discord-blurple underline hover:text-white">Discord Developer Portal</a> using the <strong>Set Discord Token</strong> button in the top right. You can also test all commands right now using the <strong>Command Console</strong> tab!
+            </p>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB 2: COMMAND EXPLORER -->
+        <!-- ============================================================ -->
+        <div id="tab-commands" class="tab-pane hidden space-y-4">
+          <div class="flex flex-col md:flex-row gap-3 items-center justify-between bg-discord-dark p-4 rounded-xl border border-discord-card">
+            <!-- Search -->
+            <div class="relative w-full md:w-80">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-discord-muted text-sm"></i>
+              <input type="text" id="cmdSearchInput" placeholder="Search commands, aliases, description..." 
+                     class="w-full bg-discord-channel pl-9 pr-4 py-2 rounded-lg text-sm text-white placeholder-discord-muted focus:outline-none focus:ring-1 focus:ring-discord-blurple">
+            </div>
+
+            <!-- Category Filter Pills -->
+            <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1" id="categoryFilterContainer">
+              <!-- Dynamically added -->
+            </div>
+          </div>
+
+          <!-- Commands Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="commandsGrid">
+            <div class="col-span-full py-12 text-center text-discord-muted">
+              <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-discord-blurple"></i>
+              <p>Loading commands directory...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB 3: COMMAND CONSOLE / SIMULATOR -->
+        <!-- ============================================================ -->
+        <div id="tab-simulator" class="tab-pane hidden space-y-4">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left: Command Input & Quick Presets -->
+            <div class="space-y-4">
+              <div class="bg-discord-card p-4 rounded-xl border border-discord-hover">
+                <h3 class="font-bold text-white text-sm mb-2 flex items-center gap-2">
+                  <i class="fa-solid fa-terminal text-discord-green"></i> Run Command
+                </h3>
+                <p class="text-xs text-discord-muted mb-3">
+                  Simulate bot commands and preview how they render in Discord embeds.
+                </p>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs text-discord-muted mb-1 font-medium">Command String</label>
+                    <div class="flex items-center bg-discord-channel rounded-lg border border-discord-hover px-3 focus-within:border-discord-blurple">
+                      <span class="text-discord-yellow font-mono font-bold mr-1 text-sm">//</span>
+                      <input type="text" id="simCommandInput" value="calc 25 * 40 / 2" 
+                             class="w-full bg-transparent py-2.5 text-sm text-white focus:outline-none font-mono"
+                             placeholder="e.g. 8ball Will it work?">
+                    </div>
+                  </div>
+
+                  <button onclick="executeSimulatedCommand()" id="simRunBtn" class="w-full py-2.5 bg-discord-blurple hover:bg-opacity-90 text-white rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i> Execute
+                  </button>
+                </div>
+              </div>
+
+              <!-- Quick Presets -->
+              <div class="bg-discord-card p-4 rounded-xl border border-discord-hover">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-discord-muted mb-3">Quick Command Presets</h4>
+                <div class="flex flex-wrap gap-2">
+                  <button onclick="setSimCommand('calc 144 / 12 + 50')" class="px-2.5 py-1 bg-discord-channel hover:bg-discord-hover text-xs rounded text-discord-text font-mono transition">calc 144 / 12 + 50</button>
+                  <button onclick="setSimCommand('8ball Is this bot awesome?')" class="px-2.5 py-1 bg-discord-channel hover:bg-discord-hover text-xs rounded text-discord-text font-mono transition">8ball Is it awesome?</button>
+                  <button onclick="setSimCommand('ping')" class="px-2.5 py-1 bg-discord-channel hover:bg-discord-hover text-xs rounded text-discord-text font-mono transition">ping</button>
+                  <button onclick="setSimCommand('botinfo')" class="px-2.5 py-1 bg-discord-channel hover:bg-discord-hover text-xs rounded text-discord-text font-mono transition">botinfo</button>
+                  <button onclick="setSimCommand('joke')" class="px-2.5 py-1 bg-discord-channel hover:bg-discord-hover text-xs rounded text-discord-text font-mono transition">joke</button>
+                  <button onclick="setSimCommand('fact')" class="px-2.5 py-1 bg-discord-channel hover:bg-discord-hover text-xs rounded text-discord-text font-mono transition">fact</button>
+                  <button onclick="setSimCommand('dice')" class="px-2.5 py-1 bg-discord-channel hover:bg-discord-hover text-xs rounded text-discord-text font-mono transition">dice</button>
+                  <button onclick="setSimCommand('flip')" class="px-2.5 py-1 bg-discord-channel hover:bg-discord-hover text-xs rounded text-discord-text font-mono transition">flip</button>
+                  <button onclick="setSimCommand('quote')" class="px-2.5 py-1 bg-discord-channel hover:bg-discord-hover text-xs rounded text-discord-text font-mono transition">quote</button>
+                  <button onclick="setSimCommand('daily')" class="px-2.5 py-1 bg-discord-channel hover:bg-discord-hover text-xs rounded text-discord-text font-mono transition">daily</button>
+                  <button onclick="setSimCommand('balance')" class="px-2.5 py-1 bg-discord-channel hover:bg-discord-hover text-xs rounded text-discord-text font-mono transition">balance</button>
+                  <button onclick="setSimCommand('slots 100')" class="px-2.5 py-1 bg-discord-channel hover:bg-discord-hover text-xs rounded text-discord-text font-mono transition">slots 100</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Simulated Discord Channel Message Output -->
+            <div class="lg:col-span-2 bg-discord-darkest rounded-xl border border-discord-card flex flex-col h-[520px]">
+              <div class="h-11 border-b border-discord-card px-4 flex items-center justify-between text-xs text-discord-muted bg-discord-dark">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-hashtag text-discord-muted"></i>
+                  <span class="font-bold text-white">bot-commands-simulator</span>
+                </div>
+                <span>Discord UI Preview</span>
+              </div>
+
+              <!-- Chat messages container -->
+              <div class="flex-1 overflow-y-auto p-4 space-y-4" id="simChatContainer">
+                <!-- User simulated message -->
+                <div class="flex gap-3 items-start">
+                  <div class="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    YOU
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-semibold text-sm text-white">User</span>
+                      <span class="text-[10px] text-discord-muted">Today at 12:00 PM</span>
+                    </div>
+                    <p class="text-sm font-mono text-discord-text mt-0.5" id="simUserMessageText">//calc 25 * 40 / 2</p>
+                  </div>
+                </div>
+
+                <!-- Bot Response Message -->
+                <div class="flex gap-3 items-start" id="simBotResponseWrapper">
+                  <div class="w-9 h-9 rounded-full bg-discord-blurple flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    <i class="fa-solid fa-robot"></i>
+                  </div>
+                  <div class="flex-1 overflow-hidden">
+                    <div class="flex items-center gap-2">
+                      <span class="font-semibold text-sm text-white">Clan Bot</span>
+                      <span class="text-[10px] bg-discord-blurple text-white font-bold px-1 rounded uppercase tracking-wider">BOT</span>
+                      <span class="text-[10px] text-discord-muted" id="simTimestamp">Just now</span>
+                    </div>
+
+                    <!-- Embed Card Container -->
+                    <div class="mt-2 flex rounded-lg overflow-hidden border border-discord-card bg-discord-dark max-w-lg shadow-md" id="simEmbedBox">
+                      <div class="w-1.5 bg-discord-blurple flex-shrink-0" id="simEmbedBar"></div>
+                      <div class="p-3.5 space-y-2 flex-1">
+                        <div class="text-xs font-bold text-white flex items-center gap-1.5" id="simEmbedTitle">
+                          🧮 Calculator Result
+                        </div>
+                        <div class="text-xs text-discord-text whitespace-pre-wrap leading-relaxed" id="simEmbedDesc">
+                          ```js
+25 * 40 / 2 = 500
+```
+                        </div>
+                        <div class="pt-2 mt-2 border-t border-discord-card/50 text-[10px] text-discord-muted flex items-center justify-between" id="simEmbedFooter">
+                          <span>Clan Bot • By Tomato#6966</span>
+                          <span id="simExecutionTime">12ms</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB 4: SOUNDBOARD PLAYER -->
+        <!-- ============================================================ -->
+        <div id="tab-soundboard" class="tab-pane hidden space-y-4">
+          <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-discord-dark p-4 rounded-xl border border-discord-card">
+            <div>
+              <h3 class="font-bold text-white text-base flex items-center gap-2">
+                <i class="fa-solid fa-volume-high text-discord-fuchsia"></i>
+                Interactive Discord Soundboard
+              </h3>
+              <p class="text-xs text-discord-muted mt-0.5">
+                Play any of the 51 built-in audio clips directly in your browser.
+              </p>
+            </div>
+            <!-- Live Playing Indicator -->
+            <div id="audioNowPlayingBar" class="hidden items-center gap-3 bg-discord-card px-4 py-2 rounded-lg border border-discord-hover">
+              <span class="w-2.5 h-2.5 rounded-full bg-discord-fuchsia animate-ping"></span>
+              <span class="text-xs font-medium text-white" id="nowPlayingText">Playing clip...</span>
+              <button onclick="stopAudio()" class="text-xs bg-discord-red/80 hover:bg-discord-red text-white px-2 py-1 rounded transition">
+                <i class="fa-solid fa-stop"></i> Stop
+              </button>
+            </div>
+          </div>
+
+          <!-- Soundboard Cards Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3" id="soundboardGrid">
+            <!-- Loaded dynamically -->
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB 5: RADIO STATIONS -->
+        <!-- ============================================================ -->
+        <div id="tab-radio" class="tab-pane hidden space-y-4">
+          <div class="bg-discord-dark p-4 rounded-xl border border-discord-card flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h3 class="font-bold text-white text-base flex items-center gap-2">
+                <i class="fa-solid fa-radio text-cyan-400"></i>
+                Live Internet Radio Stations
+              </h3>
+              <p class="text-xs text-discord-muted mt-0.5">
+                Stream live radio channels configured in botconfig/radiostations.json.
+              </p>
+            </div>
+            <!-- Search stations -->
+            <div class="relative w-full md:w-64">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-discord-muted text-xs"></i>
+              <input type="text" id="radioSearchInput" placeholder="Filter radio stations..."
+                     class="w-full bg-discord-channel pl-8 pr-3 py-1.5 rounded-lg text-xs text-white placeholder-discord-muted focus:outline-none focus:ring-1 focus:ring-cyan-400">
+            </div>
+          </div>
+
+          <!-- Station Cards Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" id="radioGrid">
+            <!-- Loaded dynamically -->
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB 6: BOT CONFIGURATION -->
+        <!-- ============================================================ -->
+        <div id="tab-config" class="tab-pane hidden space-y-6">
+          <div class="max-w-2xl bg-discord-dark p-6 rounded-xl border border-discord-card space-y-5">
+            <h3 class="font-bold text-white text-base flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-orange-400"></i>
+              Bot Settings & Configuration
+            </h3>
+
+            <div class="space-y-4 text-xs">
+              <div>
+                <label class="block font-semibold text-discord-muted mb-1">Bot Command Prefix</label>
+                <input type="text" id="cfgPrefix" value="//" class="w-full bg-discord-channel border border-discord-hover rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-discord-blurple">
+                <p class="text-[11px] text-discord-muted mt-1">Default prefix for text commands (e.g. //help, //play)</p>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-discord-muted mb-1">Bot Activity Status Text</label>
+                <input type="text" id="cfgStatusText" value="{prefix}help | Multipurpose Discord Bot" class="w-full bg-discord-channel border border-discord-hover rounded-lg px-3 py-2 text-white focus:outline-none focus:border-discord-blurple">
+                <p class="text-[11px] text-discord-muted mt-1">Placeholders: {prefix}, {guildcount}, {membercount}</p>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-discord-muted mb-1">Status Activity Type</label>
+                <select id="cfgStatusType" class="w-full bg-discord-channel border border-discord-hover rounded-lg px-3 py-2 text-white focus:outline-none focus:border-discord-blurple">
+                  <option value="PLAYING">PLAYING</option>
+                  <option value="STREAMING">STREAMING</option>
+                  <option value="LISTENING">LISTENING</option>
+                  <option value="WATCHING">WATCHING</option>
+                  <option value="COMPETING">COMPETING</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-discord-muted mb-1">Discord Bot Token</label>
+                <div class="flex gap-2">
+                  <input type="password" id="cfgToken" placeholder="Paste Discord bot token..." class="flex-1 bg-discord-channel border border-discord-hover rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-discord-blurple">
+                  <button onclick="saveBotConfig()" class="px-4 py-2 bg-discord-blurple hover:bg-opacity-90 text-white rounded-lg font-semibold transition">
+                    Save Config
+                  </button>
+                </div>
+                <p class="text-[11px] text-discord-muted mt-1">Stored safely in environment / botconfig. Do not share your token.</p>
+              </div>
+            </div>
+
+            <div id="cfgFeedback" class="hidden p-3 rounded-lg text-xs font-medium"></div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Audio Player Element -->
+  <audio id="globalAudioPlayer" class="hidden"></audio>
+
+  <!-- Token Modal -->
+  <div id="tokenModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+    <div class="bg-discord-dark border border-discord-card rounded-xl max-w-md w-full p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-white text-base flex items-center gap-2">
+          <i class="fa-solid fa-key text-discord-blurple"></i> Set Discord Bot Token
+        </h3>
+        <button onclick="closeTokenModal()" class="text-discord-muted hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="text-xs text-discord-muted leading-relaxed">
+        Obtain your bot token from the Discord Developer Portal &gt; Applications &gt; Bot &gt; Reset Token.
+      </p>
+      <div>
+        <input type="password" id="modalTokenInput" placeholder="MTAy..." class="w-full bg-discord-channel border border-discord-hover rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-discord-blurple">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeTokenModal()" class="px-4 py-2 bg-discord-card hover:bg-discord-hover text-xs text-white rounded-lg transition">Cancel</button>
+        <button onclick="submitModalToken()" class="px-4 py-2 bg-discord-blurple hover:bg-opacity-90 text-xs text-white font-semibold rounded-lg transition">Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Script -->
+  <script>
+    let currentTab = 'overview';
+    let commandsData = [];
+    let soundboardData = [];
+    let radioData = {};
+    let botConfig = {};
+
+    // Tab Switching
+    function switchTab(tabId) {
+      currentTab = tabId;
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(el => {
+        if (el.getAttribute('data-tab') === tabId) {
+          el.classList.add('bg-discord-channel', 'text-white');
+        } else {
+          el.classList.remove('bg-discord-channel', 'text-white');
+        }
+      });
+
+      const activePane = document.getElementById(`tab-${tabId}`);
+      if (activePane) activePane.classList.remove('hidden');
+
+      const titles = {
+        overview: ['Bot Overview', 'System Dashboard'],
+        commands: ['Command Explorer', 'Search & Directory'],
+        simulator: ['Command Console', 'Interactive Runner'],
+        soundboard: ['Soundboard Player', 'Audio Samples'],
+        radio: ['Live Radio Stations', 'Audio Streams'],
+        config: ['Bot Configuration', 'Settings & Credentials']
+      };
+      if (titles[tabId]) {
+        document.getElementById('tabTitle').innerText = titles[tabId][0];
+        document.getElementById('tabBadge').innerText = titles[tabId][1];
+      }
+    }
+
+    // Modal
+    function openTokenModal() {
+      document.getElementById('tokenModal').classList.remove('hidden');
+    }
+    function closeTokenModal() {
+      document.getElementById('tokenModal').classList.add('hidden');
+    }
+
+    function showToast(message, isError = false) {
+      let toast = document.getElementById('globalToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'globalToast';
+        toast.className = 'fixed bottom-5 right-5 z-50 px-4 py-3 rounded-lg shadow-lg text-xs font-semibold flex items-center gap-2 transition-all duration-300';
+        document.body.appendChild(toast);
+      }
+      toast.className = isError 
+        ? 'fixed bottom-5 right-5 z-50 px-4 py-3 rounded-lg shadow-lg text-xs font-semibold flex items-center gap-2 bg-discord-red text-white' 
+        : 'fixed bottom-5 right-5 z-50 px-4 py-3 rounded-lg shadow-lg text-xs font-semibold flex items-center gap-2 bg-discord-green text-black';
+      toast.innerHTML = `<i class="fa-solid ${isError ? 'fa-circle-exclamation' : 'fa-check'}"></i> <span>${message}</span>`;
+      toast.style.display = 'flex';
+      setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    }
+
+    async function submitModalToken() {
+      const token = document.getElementById('modalTokenInput').value.trim();
+      if (!token) return;
+      try {
+        const res = await fetch('/api/bot/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        const data = await res.json();
+        showToast(data.message || 'Token updated! Attempting login.');
+        closeTokenModal();
+        fetchStatus();
+      } catch (e) {
+        showToast('Error updating token: ' + e.message, true);
+      }
+    }
+
+    // Fetch Status
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        
+        if (data.prefix) {
+          document.getElementById('topPrefixDisplay').innerText = data.prefix;
+          document.getElementById('cfgPrefix').value = data.prefix;
+        }
+        if (data.totalCommands) {
+          document.getElementById('commandCountBadge').innerText = data.totalCommands;
+          document.getElementById('statsCommands').innerText = data.totalCommands;
+        }
+        if (data.nodeVersion) {
+          document.getElementById('nodeVerSpan').innerText = data.nodeVersion;
+        }
+
+        const dot = document.getElementById('statusIndicatorDot');
+        const subHeader = document.getElementById('botStatusSubHeader');
+        const pill = document.getElementById('bannerStatusPill');
+
+        if (data.botState === 'ready') {
+          dot.className = 'absolute bottom-0 right-0 w-3 h-3 rounded-full bg-discord-green border-2 border-discord-dark';
+          subHeader.innerText = 'Online • ' + data.totalCommands + ' Cmds';
+          pill.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-discord-green/20 text-discord-green border border-discord-green/30';
+          pill.innerText = 'Connected to Discord';
+        } else {
+          dot.className = 'absolute bottom-0 right-0 w-3 h-3 rounded-full bg-discord-yellow border-2 border-discord-dark';
+          subHeader.innerText = 'Standby • ' + data.totalCommands + ' Cmds';
+          pill.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-discord-yellow/20 text-discord-yellow border border-discord-yellow/30';
+          pill.innerText = 'Standby (Ready to connect)';
+        }
+
+        // Format uptime
+        if (data.uptime) {
+          const m = Math.floor(data.uptime / 60);
+          const s = Math.floor(data.uptime % 60);
+          document.getElementById('statsUptime').innerText = `${m}m ${s}s`;
+        }
+      } catch (e) {
+        console.error('Status fetch error:', e);
+      }
+    }
+
+    // Fetch Commands
+    async function fetchCommands() {
+      try {
+        const res = await fetch('/api/commands');
+        commandsData = await res.json();
+        renderCategoryCards();
+        renderCategoryFilter();
+        renderCommands(commandsData);
+      } catch (e) {
+        console.error('Commands fetch error:', e);
+      }
+    }
+
+    function renderCategoryCards() {
+      const container = document.getElementById('categoryCardsGrid');
+      if (!container) return;
+
+      const categories = {};
+      commandsData.forEach(cmd => {
+        const cat = cmd.category || 'General';
+        categories[cat] = (categories[cat] || 0) + 1;
+      });
+
+      const icons = {
+        'Administration': 'fa-shield-halved text-red-400',
+        'Music': 'fa-music text-pink-400',
+        'MiniGames': 'fa-gamepad text-purple-400',
+        'Soundboard': 'fa-volume-high text-fuchsia-400',
+        'Economy': 'fa-coins text-yellow-400',
+        'Ranking': 'fa-chart-simple text-blue-400',
+        'Fun': 'fa-face-laugh-beam text-amber-400',
+        'Info': 'fa-circle-info text-teal-400',
+        'Settings': 'fa-gear text-gray-400',
+        'Setup': 'fa-wrench text-orange-400',
+        'School Commands': 'fa-graduation-cap text-indigo-400',
+        'Programming': 'fa-code text-emerald-400',
+        'Filter': 'fa-sliders text-cyan-400'
+      };
+
+      container.innerHTML = Object.entries(categories).map(([cat, count]) => {
+        const iconClass = icons[cat] || 'fa-folder text-discord-blurple';
+        return `
+          <div onclick="filterByCategory('${cat}')" class="cursor-pointer bg-discord-card hover:bg-discord-hover p-4 rounded-xl border border-discord-hover transition group">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-bold text-sm text-white group-hover:text-discord-blurple transition truncate">${cat}</span>
+              <i class="fa-solid ${iconClass}"></i>
+            </div>
+            <p class="text-xs text-discord-muted">${count} commands available</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderCategoryFilter() {
+      const container = document.getElementById('categoryFilterContainer');
+      if (!container) return;
+
+      const cats = ['All', ...new Set(commandsData.map(c => c.category || 'General'))];
+      container.innerHTML = cats.map((cat, i) => `
+        <button onclick="filterByCategory('${cat}')" class="cat-pill whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium transition ${i === 0 ? 'bg-discord-blurple text-white' : 'bg-discord-channel hover:bg-discord-hover text-discord-muted'}" data-cat="${cat}">
+          ${cat}
+        </button>
+      `).join('');
+    }
+
+    function filterByCategory(cat) {
+      document.querySelectorAll('.cat-pill').forEach(el => {
+        if (el.getAttribute('data-cat') === cat) {
+          el.className = 'cat-pill whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium transition bg-discord-blurple text-white';
+        } else {
+          el.className = 'cat-pill whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium transition bg-discord-channel hover:bg-discord-hover text-discord-muted';
+        }
+      });
+
+      if (currentTab !== 'commands') switchTab('commands');
+
+      if (cat === 'All') {
+        renderCommands(commandsData);
+      } else {
+        const filtered = commandsData.filter(c => (c.category || 'General') === cat);
+        renderCommands(filtered);
+      }
+    }
+
+    function renderCommands(list) {
+      const grid = document.getElementById('commandsGrid');
+      if (!grid) return;
+
+      if (!list || list.length === 0) {
+        grid.innerHTML = '<div class="col-span-full py-12 text-center text-discord-muted">No commands match your filter.</div>';
+        return;
+      }
+
+      grid.innerHTML = list.map(cmd => `
+        <div class="bg-discord-card p-3.5 rounded-xl border border-discord-hover hover:border-discord-blurple/50 transition flex flex-col justify-between group">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-bold text-sm text-white group-hover:text-discord-blurple transition font-mono">${cmd.name}</span>
+              <span class="text-[10px] bg-discord-channel px-2 py-0.5 rounded text-discord-muted">${cmd.category || 'General'}</span>
+            </div>
+            <p class="text-xs text-discord-muted line-clamp-2 leading-relaxed mb-2">${cmd.description || 'No description provided.'}</p>
+          </div>
+          <div class="pt-2 border-t border-discord-hover/40 flex items-center justify-between text-[11px]">
+            <span class="text-discord-muted/80 font-mono truncate max-w-[140px]">${cmd.usage || '//' + cmd.name}</span>
+            <button onclick="testInSimulator('${cmd.name}')" class="text-discord-blurple hover:text-white transition flex items-center gap-1">
+              <i class="fa-solid fa-play text-[9px]"></i> Try
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Search Handler
+    document.getElementById('cmdSearchInput')?.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      if (!q) {
+        renderCommands(commandsData);
+        return;
+      }
+      const filtered = commandsData.filter(c => 
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.description && c.description.toLowerCase().includes(q)) ||
+        (c.category && c.category.toLowerCase().includes(q)) ||
+        (c.aliases && Array.isArray(c.aliases) && c.aliases.some(a => a.toLowerCase().includes(q)))
+      );
+      renderCommands(filtered);
+    });
+
+    // Soundboard
+    async function fetchSoundboard() {
+      try {
+        const res = await fetch('/api/soundboard');
+        soundboardData = await res.json();
+        document.getElementById('soundboardCountBadge').innerText = soundboardData.length;
+        document.getElementById('statsSoundboard').innerText = soundboardData.length;
+        renderSoundboard();
+      } catch (e) {
+        console.error('Soundboard fetch error:', e);
+      }
+    }
+
+    function renderSoundboard() {
+      const grid = document.getElementById('soundboardGrid');
+      if (!grid) return;
+
+      grid.innerHTML = soundboardData.map(item => `
+        <div onclick="playSound('${item.url}', '${item.name}')" class="cursor-pointer bg-discord-card hover:bg-discord-hover active:scale-95 transition-all p-3 rounded-xl border border-discord-hover flex flex-col items-center justify-center text-center gap-2 group">
+          <div class="w-10 h-10 rounded-full bg-discord-fuchsia/10 text-discord-fuchsia group-hover:bg-discord-fuchsia group-hover:text-white transition flex items-center justify-center text-base">
+            <i class="fa-solid fa-play ml-0.5"></i>
+          </div>
+          <span class="text-xs font-semibold text-white truncate w-full capitalize">${item.name.replace(/[-_]/g, ' ')}</span>
+        </div>
+      `).join('');
+    }
+
+    function playSound(url, name) {
+      const player = document.getElementById('globalAudioPlayer');
+      const bar = document.getElementById('audioNowPlayingBar');
+      const text = document.getElementById('nowPlayingText');
+
+      player.src = url;
+      player.play().catch(e => console.log('Audio autoplay prevented:', e));
+
+      bar.classList.remove('hidden');
+      bar.classList.add('flex');
+      text.innerText = `Playing: ${name.replace(/[-_]/g, ' ')}`;
+
+      player.onended = () => {
+        bar.classList.add('hidden');
+        bar.classList.remove('flex');
+      };
+    }
+
+    function stopAudio() {
+      const player = document.getElementById('globalAudioPlayer');
+      player.pause();
+      player.currentTime = 0;
+      const bar = document.getElementById('audioNowPlayingBar');
+      bar.classList.add('hidden');
+      bar.classList.remove('flex');
+    }
+
+    // Radio
+    async function fetchRadio() {
+      try {
+        const res = await fetch('/api/radio');
+        radioData = await res.json();
+        renderRadio();
+      } catch (e) {
+        console.error('Radio fetch error:', e);
+      }
+    }
+
+    function renderRadio() {
+      const grid = document.getElementById('radioGrid');
+      if (!grid) return;
+
+      const stations = Object.entries(radioData);
+      document.getElementById('statsRadio').innerText = stations.length;
+
+      grid.innerHTML = stations.map(([name, url]) => `
+        <div class="bg-discord-card p-3.5 rounded-xl border border-discord-hover flex items-center justify-between gap-3">
+          <div class="overflow-hidden">
+            <h4 class="text-xs font-bold text-white truncate">${name}</h4>
+            <p class="text-[10px] text-discord-muted truncate">Live Audio Stream</p>
+          </div>
+          <button onclick="playSound('${url}', '${name}')" class="w-8 h-8 rounded-lg bg-cyan-500/20 hover:bg-cyan-500 text-cyan-400 hover:text-white transition flex items-center justify-center text-xs flex-shrink-0">
+            <i class="fa-solid fa-play ml-0.5"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Simulator
+    function setSimCommand(cmd) {
+      document.getElementById('simCommandInput').value = cmd;
+      executeSimulatedCommand();
+    }
+
+    function testInSimulator(cmdName) {
+      switchTab('simulator');
+      document.getElementById('simCommandInput').value = cmdName;
+      executeSimulatedCommand();
+    }
+
+    async function executeSimulatedCommand() {
+      const rawInput = document.getElementById('simCommandInput').value.trim();
+      if (!rawInput) return;
+
+      document.getElementById('simUserMessageText').innerText = rawInput.startsWith('//') ? rawInput : '//' + rawInput;
+
+      const titleEl = document.getElementById('simEmbedTitle');
+      const descEl = document.getElementById('simEmbedDesc');
+      const barEl = document.getElementById('simEmbedBar');
+      const footerEl = document.getElementById('simEmbedFooter');
+      const timeEl = document.getElementById('simExecutionTime');
+
+      titleEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+      descEl.innerText = '';
+
+      const start = Date.now();
+      try {
+        const res = await fetch('/api/simulate-command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: rawInput })
+        });
+        const result = await res.json();
+        const duration = Date.now() - start;
+
+        titleEl.innerText = result.title || 'Command Result';
+        descEl.innerText = result.description || 'Command completed successfully.';
+        if (result.color) {
+          barEl.style.backgroundColor = result.color;
+        }
+        timeEl.innerText = `${duration}ms`;
+      } catch (e) {
+        titleEl.innerText = 'Error';
+        descEl.innerText = 'Failed to execute simulated command: ' + e.message;
+      }
+    }
+
+    // Save Bot Config
+    async function saveBotConfig() {
+      const prefix = document.getElementById('cfgPrefix').value.trim();
+      const statusText = document.getElementById('cfgStatusText').value.trim();
+      const statusType = document.getElementById('cfgStatusType').value;
+      const token = document.getElementById('cfgToken').value.trim();
+
+      const feedback = document.getElementById('cfgFeedback');
+      feedback.classList.remove('hidden', 'bg-emerald-500/20', 'text-emerald-400', 'bg-red-500/20', 'text-red-400');
+
+      try {
+        const res = await fetch('/api/bot/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prefix, statusText, statusType, token })
+        });
+        const data = await res.json();
+
+        feedback.className = 'p-3 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-400';
+        feedback.innerText = data.message || 'Configuration saved successfully!';
+        fetchStatus();
+      } catch (e) {
+        feedback.className = 'p-3 rounded-lg text-xs font-medium bg-red-500/20 text-red-400';
+        feedback.innerText = 'Failed to save config: ' + e.message;
+      }
+    }
+
+    // Init
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchStatus();
+      fetchCommands();
+      fetchSoundboard();
+      fetchRadio();
+      setInterval(fetchStatus, 5000);
+    });
+  </script>
+</body>
+</html>

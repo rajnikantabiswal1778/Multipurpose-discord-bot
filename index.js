@@ -1,4 +1,4 @@
-﻿/**********************************************************
+/**********************************************************
  * @INFO  [TABLE OF CONTENTS]
  * 1  Import_Modules
  * 1.1 Validating script for advertisement
@@ -110,7 +110,7 @@ client.ad = {
  *********************************************************/
 //those are must haves, they load the dbs, events and commands and important other stuff
 function requirehandlers() {
-    ["extraevents", "clientvariables", "command", "loaddb", "events", "erelahandler", "slashCommands"].forEach(handler => {
+    ["extraevents", "clientvariables", "loaddb", "command", "events", "erelahandler", "slashCommands"].forEach(handler => {
         try {
             require(`./handlers/${handler}`)(client);
         } catch (e) {
@@ -177,7 +177,16 @@ requirehandlers();
 /**********************************************************
  * @param {9} Login_to_the_Bot
  *********************************************************/
-client.login(process.env.token || config.token);
+const botToken = process.env.token || (config.token && !config.token.includes("GET from") ? config.token : null);
+if (botToken) {
+    client.login(botToken).catch(e => {
+        console.log(`[Bot] Login failed: ${e.message}`.brightRed);
+    });
+} else {
+    console.log("[Bot] No valid Discord token provided. Bot gateway running in standby/dashboard mode.".yellow);
+}
+
+module.exports = { client, config };
 
 /**********************************************************
  * @INFO

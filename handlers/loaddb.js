@@ -1,5 +1,5 @@
-module.exports = async client => {
-    const { default: Enmap } = await import("enmap");
+module.exports = client => {
+    const Enmap = require("enmap").default || require("enmap");
     let dateNow = Date.now();
     console.log(`${String("[x] :: ".magenta)}Now loading the Database...`.brightGreen);
     //Each Database gets a own file and folder which is pretty handy!
@@ -156,7 +156,7 @@ module.exports = async client => {
         dataDir: "./databases/blacklist",
     });
     client.customcommands = new Enmap({
-        name: "custom commands",
+        name: "customcommands",
         dataDir: "./databases/customcommands",
     });
     client.keyword = new Enmap({

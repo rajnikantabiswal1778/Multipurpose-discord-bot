@@ -1,0 +1,8 @@
+{
+  "name": "Multipurpose Discord Bot Dashboard",
+  "description": "Interactive web management dashboard, command explorer, soundboard, and control center for the Multipurpose Discord Bot.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

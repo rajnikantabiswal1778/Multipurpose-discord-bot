@@ -1,4 +1,4 @@
-const Canvas = require("canvas");
+const Canvas = require("@napi-rs/canvas");
 const { MessageEmbed } = require("discord.js");
 const { FastType } = require("@m3rcena/weky");
 const config = require(`${process.cwd()}/botconfig/config.json`);

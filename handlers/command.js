@@ -3,8 +3,8 @@ const { MessageEmbed } = require("discord.js");
 const serialize = require("serialize-javascript");
 const ee = require(`${process.cwd()}/botconfig/embed.json`);
 console.log("Welcome to SERVICE HANDLER /--/ By https://milrato.eu /--/ Discord: Tomato#6966".yellow);
-module.exports = async client => {
-    const { default: Enmap } = await import("enmap");
+module.exports = client => {
+    const Enmap = require("enmap").default || require("enmap");
     let dateNow = Date.now();
     console.log(`${String("[x] :: ".magenta)}Now loading the Commands ...`.brightGreen);
     try {
@@ -37,7 +37,16 @@ module.exports = async client => {
     client.giveawayDB = new Enmap({ name: "giveaways", dataDir: "./databases" });
     const GiveawayManagerWithOwnDatabase = class extends GiveawaysManager {
         async getAllGiveaways() {
-            return client.giveawayDB.fetchEverything().array();
+            try {
+                if (typeof client.giveawayDB.fetchEverything === "function") {
+                    const res = client.giveawayDB.fetchEverything();
+                    return res.array ? res.array() : Array.from(res.values ? res.values() : res);
+                }
+                if (typeof client.giveawayDB.values === "function") {
+                    return Array.from(client.giveawayDB.values());
+                }
+            } catch (e) {}
+            return [];
         }
         async saveGiveaway(messageId, giveawayData) {
             client.giveawayDB.set(messageId, giveawayData);

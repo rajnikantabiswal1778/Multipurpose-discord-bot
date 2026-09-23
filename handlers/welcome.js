@@ -15,7 +15,20 @@ const canvacord = require("canvacord");
 const config = require(`${process.cwd()}/botconfig/config.json`);
 const ee = require(`${process.cwd()}/botconfig/embed.json`);
 const { delay, duration, simple_databasing } = require(`./functions`);
-const { Captcha } = require(`captcha-canvas`); //require package here
+let Captcha;
+try {
+    Captcha = require(`captcha-canvas`).Captcha;
+} catch (e) {
+    Captcha = class {
+        constructor() {
+            this.text = Math.random().toString(36).substring(2, 8);
+        }
+        drawCaptcha() {}
+        async png() {
+            return Buffer.from("");
+        }
+    };
+}
 const ms = require("ms");
 //Create Variables
 const Fonts = "Genta, UbuntuMono, `DM Sans`, STIXGeneral, AppleSymbol, Arial, ArialUnicode";
